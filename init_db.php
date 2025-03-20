@@ -96,65 +96,65 @@ $transaction_ids[] = borrow_book($member_ids[2], $book_ids[14]);
 
 // Overdue transactions
 $transaction_ids[] = db_insert(
-    "INSERT INTO transactions (user_id, book_id, borrow_date, due_date) VALUES (:user_id, :book_id, :borrow_date, :due_date)",
+    "INSERT INTO transactions (user_id, book_id, borrowed_at, due_date, status) VALUES (:user_id, :book_id, :borrowed_at, :due_date, 'overdue')",
     [
         ':user_id' => $member_ids[1], 
         ':book_id' => $book_ids[2], 
-        ':borrow_date' => date('Y-m-d', strtotime('-20 days')), 
+        ':borrowed_at' => date('Y-m-d', strtotime('-20 days')), 
         ':due_date' => date('Y-m-d', strtotime('-5 days'))
     ]
 );
 $transaction_ids[] = db_insert(
-    "INSERT INTO transactions (user_id, book_id, borrow_date, due_date) VALUES (:user_id, :book_id, :borrow_date, :due_date)",
+    "INSERT INTO transactions (user_id, book_id, borrowed_at, due_date, status) VALUES (:user_id, :book_id, :borrowed_at, :due_date, 'overdue')",
     [
         ':user_id' => $member_ids[2], 
         ':book_id' => $book_ids[10], 
-        ':borrow_date' => date('Y-m-d', strtotime('-15 days')), 
+        ':borrowed_at' => date('Y-m-d', strtotime('-15 days')), 
         ':due_date' => date('Y-m-d', strtotime('-1 days'))
     ]
 );
 
 // Returned transactions
 $returned_transaction_id = db_insert(
-    "INSERT INTO transactions (user_id, book_id, borrow_date, due_date) VALUES (:user_id, :book_id, :borrow_date, :due_date)",
+    "INSERT INTO transactions (user_id, book_id, borrowed_at, due_date, status) VALUES (:user_id, :book_id, :borrowed_at, :due_date, 'returned')",
     [
         ':user_id' => $member_ids[0], 
         ':book_id' => $book_ids[3], 
-        ':borrow_date' => date('Y-m-d', strtotime('-30 days')), 
+        ':borrowed_at' => date('Y-m-d', strtotime('-30 days')), 
         ':due_date' => date('Y-m-d', strtotime('-16 days'))
     ]
 );
 db_execute(
-    "UPDATE transactions SET return_date = :return_date WHERE id = :id",
-    [':return_date' => date('Y-m-d', strtotime('-18 days')), ':id' => $returned_transaction_id]
+    "UPDATE transactions SET returned_at = :returned_at WHERE id = :id",
+    [':returned_at' => date('Y-m-d', strtotime('-18 days')), ':id' => $returned_transaction_id]
 );
 
 $returned_transaction_id = db_insert(
-    "INSERT INTO transactions (user_id, book_id, borrow_date, due_date) VALUES (:user_id, :book_id, :borrow_date, :due_date)",
+    "INSERT INTO transactions (user_id, book_id, borrowed_at, due_date, status) VALUES (:user_id, :book_id, :borrowed_at, :due_date, 'returned')",
     [
         ':user_id' => $member_ids[1], 
         ':book_id' => $book_ids[7], 
-        ':borrow_date' => date('Y-m-d', strtotime('-25 days')), 
+        ':borrowed_at' => date('Y-m-d', strtotime('-25 days')), 
         ':due_date' => date('Y-m-d', strtotime('-11 days'))
     ]
 );
 db_execute(
-    "UPDATE transactions SET return_date = :return_date WHERE id = :id",
-    [':return_date' => date('Y-m-d', strtotime('-10 days')), ':id' => $returned_transaction_id]
+    "UPDATE transactions SET returned_at = :returned_at WHERE id = :id",
+    [':returned_at' => date('Y-m-d', strtotime('-10 days')), ':id' => $returned_transaction_id]
 );
 
 $returned_transaction_id = db_insert(
-    "INSERT INTO transactions (user_id, book_id, borrow_date, due_date) VALUES (:user_id, :book_id, :borrow_date, :due_date)",
+    "INSERT INTO transactions (user_id, book_id, borrowed_at, due_date, status) VALUES (:user_id, :book_id, :borrowed_at, :due_date, 'returned')",
     [
         ':user_id' => $member_ids[2], 
         ':book_id' => $book_ids[12], 
-        ':borrow_date' => date('Y-m-d', strtotime('-40 days')), 
+        ':borrowed_at' => date('Y-m-d', strtotime('-40 days')), 
         ':due_date' => date('Y-m-d', strtotime('-26 days'))
     ]
 );
 db_execute(
-    "UPDATE transactions SET return_date = :return_date WHERE id = :id",
-    [':return_date' => date('Y-m-d', strtotime('-25 days')), ':id' => $returned_transaction_id]
+    "UPDATE transactions SET returned_at = :returned_at WHERE id = :id",
+    [':returned_at' => date('Y-m-d', strtotime('-25 days')), ':id' => $returned_transaction_id]
 );
 
 echo "Created sample transactions\n";
@@ -168,7 +168,7 @@ foreach ($books as $book) {
     $active_count = 0;
     
     foreach ($transactions as $transaction) {
-        if ($transaction['book_id'] == $book['id'] && empty($transaction['return_date'])) {
+        if ($transaction['book_id'] == $book['id'] && empty($transaction['returned_at'])) {
             $active_count++;
         }
     }

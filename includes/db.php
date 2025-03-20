@@ -18,13 +18,18 @@ function get_db_connection() {
         
         // Create/open the database
         try {
-            $db = new SQLite3($db_path);
+            // Ensure we're using the correct class with full namespace if needed
+            if (!class_exists('SQLite3')) {
+                die("SQLite3 extension is not available. Please install or enable the SQLite3 extension.");
+            }
+            
+            $db = new \SQLite3($db_path);
             $db->enableExceptions(true);
             
             // Set pragmas for better performance and safety
             $db->exec('PRAGMA foreign_keys = ON');
             $db->exec('PRAGMA journal_mode = WAL');
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             die("Database connection failed: " . $e->getMessage());
         }
     }
@@ -52,7 +57,7 @@ function initialize_db() {
             if (!empty($statement)) {
                 try {
                     $db->exec($statement);
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     die("Error initializing database: " . $e->getMessage() . " in statement: " . $statement);
                 }
             }
@@ -83,7 +88,7 @@ function db_query($sql, $params = []) {
         
         $result = $stmt->execute();
         return $result;
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         error_log("Database query error: " . $e->getMessage() . " in query: " . $sql);
         return false;
     }
@@ -113,7 +118,7 @@ function db_insert($sql, $params = []) {
         }
         
         return false;
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         error_log("Database insert error: " . $e->getMessage() . " in query: " . $sql);
         return false;
     }
@@ -144,7 +149,7 @@ function db_execute($sql, $params = []) {
         }
         
         return false;
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         error_log("Database execute error: " . $e->getMessage() . " in query: " . $sql);
         return false;
     }
@@ -173,4 +178,12 @@ function db_fetch_all($result) {
     }
     
     return $rows;
+}
+
+/**
+ * Get all records from a table
+ */
+function db_get_all($table, $order_by = 'id') {
+    $result = db_query("SELECT * FROM $table ORDER BY $order_by");
+    return db_fetch_all($result);
 }
