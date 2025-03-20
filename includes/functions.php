@@ -648,6 +648,51 @@ function count_user_overdue_books($user_id) {
 }
 
 /**
+ * Get all unique genres from books
+ */
+function get_all_genres() {
+    $result = db_query("SELECT DISTINCT genre FROM books WHERE genre IS NOT NULL AND genre != '' ORDER BY genre");
+    
+    $genres = [];
+    $rows = db_fetch_all($result);
+    
+    foreach ($rows as $row) {
+        $genres[] = $row['genre'];
+    }
+    
+    return $genres;
+}
+
+/**
+ * Count books with a specific condition
+ */
+function count_books_with_condition($condition = '') {
+    $sql = "SELECT COUNT(*) as count FROM books $condition";
+    $result = db_query($sql);
+    
+    $data = db_fetch($result);
+    return $data ? (int)$data['count'] : 0;
+}
+
+/**
+ * Get books with a specific condition, pagination, and sorting
+ */
+function get_books_with_condition($condition = '', $page = 1, $per_page = 10, $sort_by = 'title', $sort_order = 'ASC') {
+    $offset = ($page - 1) * $per_page;
+    
+    $sql = "SELECT b.*, p.name as publisher_name 
+            FROM books b 
+            LEFT JOIN publishers p ON b.publisher_id = p.id 
+            $condition 
+            ORDER BY $sort_by $sort_order 
+            LIMIT :limit OFFSET :offset";
+    
+    $result = db_query($sql, [':limit' => $per_page, ':offset' => $offset]);
+    
+    return db_fetch_all($result);
+}
+
+/**
  * Update overdue status
  */
 function update_overdue_status() {

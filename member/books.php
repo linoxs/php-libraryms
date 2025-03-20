@@ -87,7 +87,7 @@ Layout::bodyStart();
 ?>
 
 <div class="member-books">
-    <Layout::pageTitle('Browse Books');
+    <?php Layout::pageTitle('Browse Books'); ?>
     
     <!-- Search and Filter Section -->
     <div class="search-filter-section">
