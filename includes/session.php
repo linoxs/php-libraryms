@@ -6,6 +6,14 @@
 // Start session if not already started
 function session_start_safe() {
     if (session_status() === PHP_SESSION_NONE) {
+        // Set session cookie parameters for better security before starting the session
+        session_set_cookie_params(
+            0,                // Lifetime (0 = until browser is closed)
+            '/',             // Path
+            '',              // Domain (empty = current domain)
+            isset($_SERVER['HTTPS']), // Secure flag - only send over HTTPS if available
+            true             // HttpOnly flag - not accessible via JavaScript
+        );
         session_start();
     }
 }
@@ -13,16 +21,6 @@ function session_start_safe() {
 // Initialize session
 function initialize_session() {
     session_start_safe();
-    
-    // Set session cookie parameters for better security
-    $current_cookie_params = session_get_cookie_params();
-    session_set_cookie_params(
-        $current_cookie_params["lifetime"],
-        $current_cookie_params["path"],
-        $current_cookie_params["domain"],
-        true,  // Secure flag - only send over HTTPS
-        true   // HttpOnly flag - not accessible via JavaScript
-    );
     
     // Regenerate session ID periodically to prevent session fixation
     if (!isset($_SESSION['last_regeneration'])) {

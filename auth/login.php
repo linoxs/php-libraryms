@@ -63,7 +63,7 @@ Layout::bodyStart();
 ?>
 
 <div class="auth-container">
-    <Layout::pageTitle('Login');
+    <?php Layout::pageTitle('Login'); ?>
     
     <?php if (isset($errors['login'])): ?>
         <?php Alert::error($errors['login']); ?>

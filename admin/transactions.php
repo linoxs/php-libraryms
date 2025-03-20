@@ -55,7 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // If no validation errors, add transaction
         if (empty($errors)) {
-            $transaction_id = borrow_book($user_id, $book_id, $due_date);
+            // Calculate days between today and due date
+            $today = new DateTime(date('Y-m-d'));
+            $due = new DateTime($due_date);
+            $days_diff = $today->diff($due)->days;
+            
+            $transaction_id = borrow_book($user_id, $book_id, $days_diff);
             
             if ($transaction_id) {
                 set_flash_message('success', 'Transaction added successfully');
@@ -109,13 +114,13 @@ foreach ($books as $book) {
 $filter_condition = '';
 switch ($filter) {
     case 'active':
-        $filter_condition = "AND t.return_date IS NULL";
+        $filter_condition = "AND t.returned_at IS NULL";
         break;
     case 'returned':
-        $filter_condition = "AND t.return_date IS NOT NULL";
+        $filter_condition = "AND t.returned_at IS NOT NULL";
         break;
     case 'overdue':
-        $filter_condition = "AND t.return_date IS NULL AND t.due_date < DATE('now')";
+        $filter_condition = "AND t.returned_at IS NULL AND t.due_date < DATE('now')";
         break;
     default:
         $filter_condition = '';
@@ -132,7 +137,7 @@ Layout::bodyStart();
 ?>
 
 <div class="admin-transactions">
-    <Layout::pageTitle('Manage Transactions');
+    <?php Layout::pageTitle('Manage Transactions'); ?>
     
     <div class="action-buttons">
         <button id="add-transaction-btn" class="btn btn-primary">Add New Transaction</button>
@@ -168,24 +173,24 @@ Layout::bodyStart();
                     <tbody>
                         <?php foreach ($transactions as $transaction): ?>
                             <?php
-                            $is_overdue = is_null($transaction['return_date']) && strtotime($transaction['due_date']) < time();
-                            $status_class = $is_overdue ? 'status-overdue' : (is_null($transaction['return_date']) ? 'status-active' : 'status-returned');
-                            $status_text = $is_overdue ? 'Overdue' : (is_null($transaction['return_date']) ? 'Active' : 'Returned');
+                            $is_overdue = is_null($transaction['returned_at']) && strtotime($transaction['due_date']) < time();
+                            $status_class = $is_overdue ? 'status-overdue' : (is_null($transaction['returned_at']) ? 'status-active' : 'status-returned');
+                            $status_text = $is_overdue ? 'Overdue' : (is_null($transaction['returned_at']) ? 'Active' : 'Returned');
                             ?>
                             <tr>
                                 <td><?php echo $transaction['id']; ?></td>
                                 <td><?php echo htmlspecialchars($transaction['username']); ?></td>
                                 <td><?php echo htmlspecialchars($transaction['title']); ?></td>
-                                <td><?php echo date('M d, Y', strtotime($transaction['borrow_date'])); ?></td>
+                                <td><?php echo date('M d, Y', strtotime($transaction['borrowed_at'])); ?></td>
                                 <td><?php echo date('M d, Y', strtotime($transaction['due_date'])); ?></td>
                                 <td>
-                                    <?php echo $transaction['return_date'] ? date('M d, Y', strtotime($transaction['return_date'])) : '-'; ?>
+                                    <?php echo $transaction['returned_at'] ? date('M d, Y', strtotime($transaction['returned_at'])) : '-'; ?>
                                 </td>
                                 <td>
                                     <span class="status-badge <?php echo $status_class; ?>"><?php echo $status_text; ?></span>
                                 </td>
                                 <td>
-                                    <?php if (is_null($transaction['return_date'])): ?>
+                                    <?php if (is_null($transaction['returned_at'])): ?>
                                         <button class="btn btn-sm btn-success return-book-btn" data-id="<?php echo $transaction['id']; ?>" data-book="<?php echo htmlspecialchars($transaction['title']); ?>" data-user="<?php echo htmlspecialchars($transaction['username']); ?>">Return Book</button>
                                     <?php else: ?>
                                         <span class="text-muted">No actions</span>
@@ -322,17 +327,84 @@ Layout::bodyStart();
         background-color: #dc3545;
         color: white;
     }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .modal.show {
+        display: block;
+    }
+    
+    .modal-content {
+        background-color: #fff;
+        margin: 10% auto;
+        padding: 0;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        width: 80%;
+        max-width: 600px;
+        position: relative;
+        animation: modalFadeIn 0.3s;
+    }
+    
+    .modal-header {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .close-modal {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #555;
+    }
+    
+    .close-modal:hover {
+        color: #000;
+    }
+    
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-50px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 </style>
 
 <script>
     // Modal functionality
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM fully loaded');
+        
         // Add Transaction Modal
         const addTransactionBtn = document.getElementById('add-transaction-btn');
         const addTransactionModal = document.getElementById('add-transaction-modal');
         
         if (addTransactionBtn && addTransactionModal) {
-            addTransactionBtn.addEventListener('click', function() {
+            console.log('Add transaction button and modal found');
+            addTransactionBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Add transaction button clicked');
                 addTransactionModal.classList.add('show');
             });
             
@@ -341,6 +413,11 @@ Layout::bodyStart();
                 button.addEventListener('click', function() {
                     addTransactionModal.classList.remove('show');
                 });
+            });
+        } else {
+            console.error('Add transaction button or modal not found', { 
+                addTransactionBtn: !!addTransactionBtn, 
+                addTransactionModal: !!addTransactionModal 
             });
         }
         
@@ -351,12 +428,18 @@ Layout::bodyStart();
         const returnBookTitle = document.getElementById('return-book-title');
         const returnBookUser = document.getElementById('return-book-user');
         
+        console.log('Return book buttons found:', returnButtons.length);
+        
         if (returnButtons.length > 0 && returnBookModal && returnTransactionId && returnBookTitle && returnBookUser) {
             returnButtons.forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Return book button clicked');
                     const id = this.getAttribute('data-id');
                     const book = this.getAttribute('data-book');
                     const user = this.getAttribute('data-user');
+                    
+                    console.log('Return book data:', { id, book, user });
                     
                     returnTransactionId.value = id;
                     returnBookTitle.textContent = book;
@@ -372,11 +455,20 @@ Layout::bodyStart();
                     returnBookModal.classList.remove('show');
                 });
             });
+        } else {
+            console.error('Return book elements not found', { 
+                returnButtons: returnButtons.length, 
+                returnBookModal: !!returnBookModal,
+                returnTransactionId: !!returnTransactionId,
+                returnBookTitle: !!returnBookTitle,
+                returnBookUser: !!returnBookUser
+            });
         }
         
         // Close modals when clicking outside
         window.addEventListener('click', function(event) {
-            if (event.target.classList.contains('modal')) {
+            if (event.target.classList.contains('modal') && event.target.classList.contains('show')) {
+                console.log('Closing modal by clicking outside');
                 event.target.classList.remove('show');
             }
         });
