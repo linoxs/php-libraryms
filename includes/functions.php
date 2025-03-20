@@ -521,6 +521,20 @@ function get_user_borrowed_book_ids($user_id) {
 }
 
 /**
+ * Check if a user has an active borrow for a specific book
+ */
+function has_active_borrow($user_id, $book_id) {
+    $result = db_query(
+        "SELECT COUNT(*) as count FROM transactions 
+         WHERE user_id = :user_id AND book_id = :book_id AND status = 'borrowed'",
+        [':user_id' => $user_id, ':book_id' => $book_id]
+    );
+    
+    $data = db_fetch($result);
+    return $data && (int)$data['count'] > 0;
+}
+
+/**
  * Get user's borrow history
  */
 function get_user_borrow_history($user_id) {
@@ -559,18 +573,22 @@ function get_user_transaction_history($user_id, $limit = null) {
 /**
  * Get all transactions with pagination
  */
-function get_all_transactions($page = 1, $per_page = 10) {
+function get_all_transactions($page = 1, $per_page = 10, $filter_condition = '') {
     $offset = ($page - 1) * $per_page;
     
-    $result = db_query(
-        "SELECT t.*, u.username, u.full_name, b.title, b.author 
+    $sql = "SELECT t.*, u.username, u.full_name, b.title, b.author 
          FROM transactions t 
          JOIN users u ON t.user_id = u.id 
-         JOIN books b ON t.book_id = b.id 
-         ORDER BY t.borrowed_at DESC 
-         LIMIT :limit OFFSET :offset",
-        [':limit' => $per_page, ':offset' => $offset]
-    );
+         JOIN books b ON t.book_id = b.id";
+         
+    if (!empty($filter_condition)) {
+        $sql .= " $filter_condition";
+    }
+    
+    $sql .= " ORDER BY t.borrowed_at DESC 
+         LIMIT :limit OFFSET :offset";
+    
+    $result = db_query($sql, [':limit' => $per_page, ':offset' => $offset]);
     
     return db_fetch_all($result);
 }
@@ -578,9 +596,15 @@ function get_all_transactions($page = 1, $per_page = 10) {
 /**
  * Count total transactions
  */
-function count_transactions() {
-    $result = db_query("SELECT COUNT(*) as count FROM transactions");
-    $row = db_fetch_assoc($result);
+function count_transactions($filter_condition = '') {
+    $sql = "SELECT COUNT(*) as count FROM transactions t";
+    
+    if (!empty($filter_condition)) {
+        $sql .= " $filter_condition";
+    }
+    
+    $result = db_query($sql);
+    $row = db_fetch($result);
     return $row['count'];
 }
 

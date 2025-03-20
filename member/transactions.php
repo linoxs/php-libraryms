@@ -22,13 +22,13 @@ $per_page = 10;
 $filter_condition = "WHERE t.user_id = $user_id";
 switch ($filter) {
     case 'active':
-        $filter_condition .= " AND t.return_date IS NULL";
+        $filter_condition .= " AND t.returned_at IS NULL";
         break;
     case 'returned':
-        $filter_condition .= " AND t.return_date IS NOT NULL";
+        $filter_condition .= " AND t.returned_at IS NOT NULL";
         break;
     case 'overdue':
-        $filter_condition .= " AND t.return_date IS NULL AND t.due_date < DATE('now')";
+        $filter_condition .= " AND t.returned_at IS NULL AND t.due_date < DATE('now')";
         break;
     default:
         break;
@@ -44,7 +44,7 @@ Layout::bodyStart();
 ?>
 
 <div class="member-transactions">
-    <Layout::pageTitle('My Transactions');
+    <?php Layout::pageTitle('My Transactions'); ?>
     
     <!-- Filter Tabs -->
     <div class="filter-tabs">
@@ -79,17 +79,17 @@ Layout::bodyStart();
                     <tbody>
                         <?php foreach ($transactions as $transaction): ?>
                             <?php
-                            $is_overdue = is_null($transaction['return_date']) && strtotime($transaction['due_date']) < time();
-                            $status_class = $is_overdue ? 'status-overdue' : (is_null($transaction['return_date']) ? 'status-active' : 'status-returned');
-                            $status_text = $is_overdue ? 'Overdue' : (is_null($transaction['return_date']) ? 'Active' : 'Returned');
+                            $is_overdue = is_null($transaction['returned_at']) && strtotime($transaction['due_date']) < time();
+                            $status_class = $is_overdue ? 'status-overdue' : (is_null($transaction['returned_at']) ? 'status-active' : 'status-returned');
+                            $status_text = $is_overdue ? 'Overdue' : (is_null($transaction['returned_at']) ? 'Active' : 'Returned');
                             ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($transaction['title']); ?></td>
                                 <td><?php echo htmlspecialchars($transaction['author']); ?></td>
-                                <td><?php echo date('M d, Y', strtotime($transaction['borrow_date'])); ?></td>
+                                <td><?php echo date('M d, Y', strtotime($transaction['borrowed_at'])); ?></td>
                                 <td><?php echo date('M d, Y', strtotime($transaction['due_date'])); ?></td>
                                 <td>
-                                    <?php echo $transaction['return_date'] ? date('M d, Y', strtotime($transaction['return_date'])) : '-'; ?>
+                                    <?php echo $transaction['returned_at'] ? date('M d, Y', strtotime($transaction['returned_at'])) : '-'; ?>
                                 </td>
                                 <td>
                                     <span class="status-badge <?php echo $status_class; ?>"><?php echo $status_text; ?></span>
