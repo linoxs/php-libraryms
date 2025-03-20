@@ -93,16 +93,6 @@ php-libraryms/
 - Secure session management
 - Role-based access control
 
-## 🖥️ Screenshots
-
-### Admin Dashboard
-![Admin Dashboard](https://via.placeholder.com/800x400?text=Admin+Dashboard)
-
-### Book Management
-![Book Management](https://via.placeholder.com/800x400?text=Book+Management)
-
-### Member Dashboard
-![Member Dashboard](https://via.placeholder.com/800x400?text=Member+Dashboard)
 
 ## 🛠️ Development
 
@@ -117,26 +107,6 @@ php-libraryms/
 3. Configure your web server to point to the project directory
 4. Start developing!
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 👏 Acknowledgements
-
-- [HTMX](https://htmx.org/) for providing a simple way to access modern browser features
-- [SQLite](https://www.sqlite.org/) for a reliable embedded database
-- All contributors who have helped shape this project
-
 ---
 
-Made with ❤️ by [Your Name]
+Made with ❤️ by Desilino Muharyadi Putra
