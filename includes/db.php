@@ -166,6 +166,16 @@ function db_fetch_assoc($result) {
 }
 
 /**
+ * Fetch a single row from a result set as an associative array
+ */
+function db_fetch($result) {
+    if ($result) {
+        return $result->fetchArray(SQLITE3_ASSOC);
+    }
+    return false;
+}
+
+/**
  * Fetch all rows as an array of associative arrays
  */
 function db_fetch_all($result) {

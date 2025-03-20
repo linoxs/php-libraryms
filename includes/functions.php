@@ -489,6 +489,22 @@ function get_user_borrowed_books($user_id) {
 }
 
 /**
+ * Get user's active transactions (currently borrowed books)
+ */
+function get_user_active_transactions($user_id) {
+    $result = db_query(
+        "SELECT t.*, b.title, b.author, b.isbn 
+         FROM transactions t 
+         JOIN books b ON t.book_id = b.id 
+         WHERE t.user_id = :user_id AND t.status = 'borrowed' 
+         ORDER BY t.borrowed_at DESC",
+        [':user_id' => $user_id]
+    );
+    
+    return db_fetch_all($result);
+}
+
+/**
  * Get user's borrow history
  */
 function get_user_borrow_history($user_id) {
@@ -500,6 +516,26 @@ function get_user_borrow_history($user_id) {
          ORDER BY t.borrowed_at DESC",
         [':user_id' => $user_id]
     );
+    
+    return db_fetch_all($result);
+}
+
+/**
+ * Get user's transaction history with limit
+ */
+function get_user_transaction_history($user_id, $limit = null) {
+    $sql = "SELECT t.*, b.title, b.author, b.isbn 
+            FROM transactions t 
+            JOIN books b ON t.book_id = b.id 
+            WHERE t.user_id = :user_id 
+            ORDER BY t.borrowed_at DESC";
+    
+    if ($limit !== null) {
+        $sql .= " LIMIT :limit";
+        $result = db_query($sql, [':user_id' => $user_id, ':limit' => $limit]);
+    } else {
+        $result = db_query($sql, [':user_id' => $user_id]);
+    }
     
     return db_fetch_all($result);
 }
@@ -549,6 +585,66 @@ function get_overdue_books() {
     );
     
     return db_fetch_all($result);
+}
+
+/**
+ * Get user's overdue books
+ */
+function get_user_overdue_books($user_id) {
+    $current_date = date('Y-m-d H:i:s');
+    
+    $result = db_query(
+        "SELECT t.*, b.title, b.author, b.isbn 
+         FROM transactions t 
+         JOIN books b ON t.book_id = b.id 
+         WHERE t.user_id = :user_id AND t.status = 'borrowed' AND t.due_date < :current_date 
+         ORDER BY t.due_date",
+        [':user_id' => $user_id, ':current_date' => $current_date]
+    );
+    
+    return db_fetch_all($result);
+}
+
+/**
+ * Count all transactions for a user
+ */
+function count_user_transactions($user_id) {
+    $result = db_query(
+        "SELECT COUNT(*) as count FROM transactions WHERE user_id = :user_id",
+        [':user_id' => $user_id]
+    );
+    
+    $data = db_fetch($result);
+    return $data ? (int)$data['count'] : 0;
+}
+
+/**
+ * Count active transactions for a user
+ */
+function count_user_active_transactions($user_id) {
+    $result = db_query(
+        "SELECT COUNT(*) as count FROM transactions WHERE user_id = :user_id AND status = 'borrowed'",
+        [':user_id' => $user_id]
+    );
+    
+    $data = db_fetch($result);
+    return $data ? (int)$data['count'] : 0;
+}
+
+/**
+ * Count overdue books for a user
+ */
+function count_user_overdue_books($user_id) {
+    $current_date = date('Y-m-d H:i:s');
+    
+    $result = db_query(
+        "SELECT COUNT(*) as count FROM transactions 
+         WHERE user_id = :user_id AND status = 'borrowed' AND due_date < :current_date",
+        [':user_id' => $user_id, ':current_date' => $current_date]
+    );
+    
+    $data = db_fetch($result);
+    return $data ? (int)$data['count'] : 0;
 }
 
 /**

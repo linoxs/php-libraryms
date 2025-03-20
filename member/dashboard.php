@@ -36,7 +36,7 @@ Layout::bodyStart();
 ?>
 
 <div class="member-dashboard">
-    <Layout::pageTitle('Member Dashboard');
+    <?php Layout::pageTitle('Member Dashboard'); ?>
     
     <div class="welcome-message">
         <h3>Welcome, <?php echo htmlspecialchars($user['full_name']); ?>!</h3>
@@ -104,7 +104,7 @@ Layout::bodyStart();
                             <tr>
                                 <td><?php echo htmlspecialchars($transaction['title']); ?></td>
                                 <td><?php echo htmlspecialchars($transaction['author']); ?></td>
-                                <td><?php echo date('M d, Y', strtotime($transaction['borrow_date'])); ?></td>
+                                <td><?php echo date('M d, Y', strtotime($transaction['borrowed_at'])); ?></td>
                                 <td><?php echo date('M d, Y', strtotime($transaction['due_date'])); ?></td>
                                 <td>
                                     <span class="status-badge <?php echo $status_class; ?>"><?php echo $status_text; ?></span>
@@ -172,10 +172,10 @@ Layout::bodyStart();
                         <?php foreach ($transaction_history as $transaction): ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($transaction['title']); ?></td>
-                                <td><?php echo date('M d, Y', strtotime($transaction['borrow_date'])); ?></td>
+                                <td><?php echo date('M d, Y', strtotime($transaction['borrowed_at'])); ?></td>
                                 <td><?php echo date('M d, Y', strtotime($transaction['due_date'])); ?></td>
                                 <td>
-                                    <?php echo $transaction['return_date'] ? date('M d, Y', strtotime($transaction['return_date'])) : '-'; ?>
+                                    <?php echo $transaction['returned_at'] ? date('M d, Y', strtotime($transaction['returned_at'])) : '-'; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
