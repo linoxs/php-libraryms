@@ -505,6 +505,22 @@ function get_user_active_transactions($user_id) {
 }
 
 /**
+ * Get IDs of books currently borrowed by a user
+ */
+function get_user_borrowed_book_ids($user_id) {
+    $result = db_query(
+        "SELECT book_id FROM transactions 
+         WHERE user_id = :user_id AND status = 'borrowed'",
+        [':user_id' => $user_id]
+    );
+    
+    $books = db_fetch_all($result);
+    return array_map(function($book) {
+        return (int)$book['book_id'];
+    }, $books);
+}
+
+/**
  * Get user's borrow history
  */
 function get_user_borrow_history($user_id) {
